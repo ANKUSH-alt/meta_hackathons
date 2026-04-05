@@ -1,0 +1,24 @@
+name: cloud-security-auditor
+version: "0.1.0"
+description: "A real-world cloud security audit environment for AI agents."
+hardware:
+  tier: "cpu-small"
+  vCPU: 2
+  RAM: 4Gi
+port: 8000
+entrypoint: "uvicorn server.app:app --host 0.0.0.0 --port 8000"
+tags:
+  - security
+  - cloud
+  - task-based
+evaluation:
+  tasks:
+    - id: "easy"
+      name: "S3 Public Audit"
+      difficulty: "easy"
+    - id: "medium"
+      name: "EC2 Security Patch"
+      difficulty: "medium"
+    - id: "hard"
+      name: "IAM Log Forensic"
+      difficulty: "hard"
