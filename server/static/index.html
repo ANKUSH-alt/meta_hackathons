@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Security Auditor Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/ui/index.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo">🛡️</div>
+                <h1>Auditor<span>OpenEnv</span></h1>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-label">Select Task</div>
+                <button class="task-btn active" data-task="easy">
+                    <span class="difficulty easy">Easy</span>
+                    <span class="task-name">S3 Public Audit</span>
+                </button>
+                <button class="task-btn" data-task="medium">
+                    <span class="difficulty medium">Medium</span>
+                    <span class="task-name">EC2 Security Patch</span>
+                </button>
+                <button class="task-btn" data-task="hard">
+                    <span class="difficulty hard">Hard</span>
+                    <span class="task-name">IAM Log Forensic</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="reset-btn" class="primary-btn">Reset Environment</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="status-summary">
+                    <div class="stat-item">
+                        <label>Current Task</label>
+                        <span id="current-task-display">None</span>
+                    </div>
+                    <div class="stat-item">
+                        <label>Reward</label>
+                        <span id="current-reward">0.0</span>
+                    </div>
+                    <div class="stat-item">
+                        <label>Status</label>
+                        <span id="env-status" class="status-badge">Idle</span>
+                    </div>
+                </div>
+            </header>
+
+            <section class="dashboard-grid">
+                <!-- Resources Panel -->
+                <div class="panel resources-panel">
+                    <div class="panel-header">
+                        <h2>Infrastructure Overview</h2>
+                        <span class="resource-count" id="resource-count">0 Resources</span>
+                    </div>
+                    <div class="resource-grid" id="resource-display">
+                        <!-- Resource cards injected here -->
+                        <div class="empty-state">No resources discovered. Reset or step to view.</div>
+                    </div>
+                </div>
+
+                <!-- Action Log -->
+                <div class="panel log-panel">
+                    <div class="panel-header">
+                        <h2>Execution Log</h2>
+                        <button id="clear-log" class="icon-btn">🗑️</button>
+                    </div>
+                    <div class="terminal-log" id="action-log">
+                        <div class="log-entry system">System initialized. Awaiting task selection...</div>
+                    </div>
+                    <div class="manual-action">
+                        <input type="text" id="manual-input" placeholder="Enter manual action (e.g. list s3)...">
+                        <button id="run-action">Execute</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals / Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="/ui/app.js"></script>
+</body>
+</html>
