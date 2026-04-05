@@ -1,9 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from openenv_core.env_server import create_fastapi_app
 from .models import CloudAction, CloudObservation
 from .environment import CloudAuditEnv
+from typing import Any, Dict
 import os
 
 # Initialize the environment
@@ -11,6 +12,18 @@ env = CloudAuditEnv()
 
 # Create the FastAPI app using openenv-core
 app = create_fastapi_app(env, CloudAction, CloudObservation)
+
+# ── Override /reset to properly pass task_id ────────────────────────────────
+# openenv-core's built-in /reset handler ignores request body fields (known TODO).
+# Remove the library's /reset route first so our override wins (FastAPI is first-match).
+app.routes[:] = [r for r in app.routes if not (hasattr(r, "path") and r.path == "/reset")]
+
+@app.post("/reset")
+async def reset_with_task(request: Dict[str, Any] = Body(default={})) -> Dict[str, Any]:
+    """Reset the environment, forwarding task_id from the request body."""
+    task_id = request.get("task_id", "easy")
+    observation = env.reset(task_id=task_id)
+    return observation.model_dump() if hasattr(observation, "model_dump") else observation.__dict__
 
 # Add custom routes for the UI
 static_dir = os.path.join(os.path.dirname(__file__), "static")

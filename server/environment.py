@@ -80,13 +80,18 @@ class CloudAuditEnv:
                 for sg in self.resources["ec2"][0]["security_groups"]:
                     if patch and "rules" in patch:
                         sg["rules"] = patch["rules"]
-                obs.status = f"Updated security groups for {res_id}"
+                obs.status = f"Updated security groups for EC2 instance {res_id}"
                 # Check for reward
                 rules = self.resources["ec2"][0]["security_groups"][0]["rules"]
                 has_rdp = any(r["port"] == 3389 and r["cidr"] == "0.0.0.0/0" for r in rules)
                 if not has_rdp:
                     reward = 1.0
                     terminated = True
+                    obs.info = "Success! Port 3389 removed. Task completed."
+                else:
+                    obs.info = "Port 3389 is still open. Remove it by omitting it from the rules list."
+            elif self.task_id == "medium":
+                obs.status = f"Invalid resource ID '{res_id}'. Use the EC2 instance ID 'i-0abcdef1234567890', not the security group ID."
             else:
                 obs.status = "Action not permitted or invalid resource."
 
@@ -110,16 +115,19 @@ class CloudAuditEnv:
                         terminated = True
                         obs.info = "Correct! Task completed."
                     else:
-                        obs.info = f"Incorrect list of buckets. Got: {answers}"
+                        obs.info = f"Incorrect. Expected the public prod S3 bucket ID. Got: {answers}"
             
             elif self.task_id == "hard":
-                # Expecting rogue IP
-                if action.answer == "192.168.1.50":
+                # Expecting rogue IP from auth-logs
+                if action.answer and action.answer.strip() == "192.168.1.50":
                     reward = 1.0
                     terminated = True
-                    obs.info = "Correct Rogue IP identified!"
+                    obs.info = "Correct! Rogue IP identified. Task completed."
                 else:
-                    obs.info = f"Wrong IP. Got: {action.answer}"
+                    obs.info = f"Wrong IP address. Got: {action.answer}. Check the auth-logs for the DeleteStorage action."
+            
+            elif self.task_id == "medium":
+                obs.info = "For the medium task, use the 'modify' action to update the EC2 security group, not 'submit'."
 
         self.score += reward
         obs.reward = reward
