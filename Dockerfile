@@ -8,7 +8,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
 COPY server/ ./server/
+COPY scripts/ ./scripts/
+COPY inference.py .
 COPY openenv.yaml .
+COPY README.md .
+COPY DOCUMENTATION.md .
 
 # Expose the API port
 EXPOSE 8000
