@@ -5,8 +5,8 @@ hardware:
   tier: "cpu-small"
   vCPU: 2
   RAM: 4Gi
-port: 8000
-entrypoint: "uvicorn server.app:app --host 0.0.0.0 --port 8000"
+port: 7860
+entrypoint: "uvicorn server.app:app --host 0.0.0.0 --port 7860"
 tags:
   - security
   - cloud

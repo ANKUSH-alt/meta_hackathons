@@ -1,64 +1,74 @@
-# CloudSecurityAuditor OpenEnv
+---
+title: Cloud Security Auditor
+emoji: 🛡️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+license: apache-2.0
+---
 
-A standardized AI agent environment for simulating real-world cloud security audits. Built using the **OpenEnv** specification, it allows agents to interact with a mock cloud infrastructure to identify and remediate vulnerabilities.
+# 🛡️ CloudSecurityAuditor OpenEnv
+
+**CloudSecurityAuditor** is a high-fidelity, standardized AI agent environment designed to simulate real-world cloud security audit scenarios. Built upon the **OpenEnv** specification, it provides a safe, reproducible sandbox where autonomous agents can practice identifying, analyzing, and remediating critical security vulnerabilities in a mock cloud infrastructure.
+
+This environment is specifically engineered for benchmarking LLM-based security agents, offering a structured API and deterministic evaluation metrics.
 
 ## 🌟 Key Features
-- **Typed Models**: Full Pydantic support for actions and observations.
-- **Three Task Tiers**: Includes Easy (Information Gathering), Medium (Remediation), and Hard (Forensic Analysis).
-- **Gymnasium-Compatible API**: Implements `step()`, `reset()`, and `state()` methods.
-- **Reward-Driven**: Scalar rewards from 0.0 to 1.0 based on task completion.
 
-## 🛠 Action Space
-The agent can perform the following actions via the `step()` method:
+- **Standardized API**: Fully compliant with the `openenv-core` specification, featuring Gymnasium-style `step()`, `reset()`, and `state()` methods.
+- **Realistic Cloud Mocking**: Simulates S3 bucket configurations, EC2 security groups, and IAM audit logs with high precision.
+- **Multi-Tiered Evaluation**:
+    - **Easy (Audit)**: Focuses on information gathering and resource tagging.
+    - **Medium (Remediation)**: Requires active patching and configuration changes.
+    - **Hard (Forensics)**: Demands log analysis and pattern matching to identify rogue actors.
+- **Typed Observations**: Robust Pydantic-based action and observation models ensure reliable agent-environment interactions.
+- **Automated Grading**: Scalar reward functions (0.0 to 1.0) provide immediate, granular feedback on agent performance.
 
-- **`list`**: Lists resources of a specific type (`s3`, `ec2`).
-- **`describe`**: Fetches detailed configuration for a specific resource ID.
-- **`modify`**: Updates resource configurations (e.g., security groups).
-- **`logs`**: Retrieves logs for a specific resource or service.
-- **`submit`**: Submits the final answer for the evaluation tasks.
+## 🛠 Action & Observation Space
 
-## 📊 Observation Space
-Each step returns a `CloudObservation` containing:
-- `resources`: A list of discovered resource records.
-- `details`: Metadata for a specific resource.
-- `logs`: Relevant log entries.
-- `status`: Human-readable status message.
-- `info`: Additional environment metadata.
+### Actions
+- `list`: Inventory resources (`s3`, `ec2`).
+- `describe`: Deep-dive into resource metadata.
+- `modify`: Apply security patches and rule updates.
+- `logs`: Extract forensic evidence from authentication logs.
+- `submit`: Finalize the task with a structured answer.
 
-## 📋 Tasks
+### Observations
+- `resources`: Comprehensive resource records.
+- `details`: Metadata for specific entities.
+- `logs`: Event-based log entries.
+- `status`: Execution status and helper messages.
 
-1. **Easy (S3 Public Audit)**: Identify all public S3 buckets in the 'prod' region.
-2. **Medium (EC2 Security Patch)**: Find an EC2 instance with RDP port open to the internet and close it.
-3. **Hard (IAM Log Forensic)**: Trace unauthorized actions in `auth-logs` to identify a rogue IP address.
+## 📊 Available Tasks
 
-## 🚀 Setup & Installation
+| ID | Name | Objective | Difficulty |
+|:---|:---|:---|:---|
+| `easy` | **S3 Public Audit** | Identify public 'prod' buckets. | Auditing |
+| `medium` | **EC2 Security Patch** | Remediate open RDP ports (3389). | Remediation |
+| `hard` | **IAM Log Forensic** | Trace 'DeleteStorage' actions in logs. | Forensics |
 
-### Local Installation
+## 🚀 Quick Start (Hugging Face)
+
+If you are running this in a **Hugging Face Space**:
+
+1.  **Examine the API**: The environment is hosted as a FastAPI server. Use the `/ui` endpoint for a visual dashboard.
+2.  **Inference**: Run the `inference.py` script locally, pointing the `ENV_URL` to your Space's URL.
+3.  **Evaluate**: The system will emit standardized logs for automated leaderboard tracking.
+
+## 🐳 Local Deployment
+
 ```bash
+# Clone and Install
 pip install -r requirements.txt
-```
 
-### Running the Server
-```bash
+# Run Server
 python -m server.app
-```
-The server will start on `http://localhost:8000`.
 
-### Running the Baseline Agent
-```bash
-python scripts/baseline_inference.py
+# Run Baseline
+python inference.py
 ```
 
-## 🐳 Docker Deployment
-To build and run the containerized environment:
-```bash
-docker build -t cloud-security-auditor-env .
-docker run -p 8000:8000 cloud-security-auditor-env
-```
-
-## 🤗 Hugging Face Spaces
-This environment is designed to be deployed as an **OpenEnv Space**.
-1. Create a new Space on Hugging Face.
-2. Select **Docker** as the SDK.
-3. Upload the repository contents (including `openenv.yaml` and `Dockerfile`).
-4. Set the `entrypoint` to match the `uvicorn` command in `openenv.yaml`.
+---
+Built with ❤️ for the AI Security community.

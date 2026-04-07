@@ -21,11 +21,13 @@ from openai import OpenAI
 # ──────────────────────────────────────────────
 # Configuration from environment variables
 # ──────────────────────────────────────────────
-API_BASE_URL = os.environ.get("API_BASE_URL", "https://openrouter.ai/api/v1")
-MODEL_NAME = os.environ.get("MODEL_NAME", "openai/gpt-4o-mini")
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://openrouter.ai/api/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "openai/gpt-4o-mini")
+HF_TOKEN = os.getenv("HF_TOKEN", "")
+LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME", "")
 
-ENV_URL = os.environ.get("ENV_URL", "http://localhost:8000")
+ENV_URL = os.getenv("ENV_URL", "http://localhost:8000")
+BENCHMARK_NAME = "cloud-security-auditor"
 
 # Initialize OpenAI-compatible client
 client = OpenAI(
@@ -119,7 +121,13 @@ def ask_llm(system_prompt: str, conversation: list) -> dict:
     # Strip markdown code fences if present
     if raw.startswith("```"):
         lines = raw.split("\n")
-        raw = "\n".join(lines[1:-1]) if len(lines) > 2 else raw
+        # Handle cases where the JSON block is the only content
+        if "{" in raw:
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            raw = raw[start:end]
+        else:
+            raw = "\n".join(lines[1:-1]) if len(lines) > 2 else raw
 
     try:
         return json.loads(raw)
@@ -135,81 +143,91 @@ def ask_llm(system_prompt: str, conversation: list) -> dict:
 # ──────────────────────────────────────────────
 # Structured logging helpers
 # ──────────────────────────────────────────────
-def log_start(task_id: str, task_name: str):
-    """Emit [START] log."""
-    print(f"[START] task_id={task_id} task_name={task_name} timestamp={datetime.now(timezone.utc).isoformat()}")
+def log_start(task_name: str):
+    """
+    [START] task=<task_name> env=<benchmark> model=<model_name>
+    """
+    print(f"[START] task={task_name} env={BENCHMARK_NAME} model={MODEL_NAME}")
     sys.stdout.flush()
 
 
-def log_step(task_id: str, step_num: int, action: dict, observation: dict, reward: float, done: bool):
-    """Emit [STEP] log."""
-    print(
-        f"[STEP] task_id={task_id} step={step_num} "
-        f"action={json.dumps(action)} "
-        f"observation={json.dumps(observation)} "
-        f"reward={reward} done={done} "
-        f"timestamp={datetime.now(timezone.utc).isoformat()}"
-    )
+def log_step(step_num: int, action: dict, reward: float, done: bool, error: str = None):
+    """
+    [STEP] step=<n> action=<action_str> reward=<0.00> done=<true|false> error=<msg|null>
+    """
+    error_str = "null" if not error else error
+    # Remove newlines from action for single-line requirement
+    action_str = json.dumps(action).replace("\n", " ")
+    done_str = "true" if done else "false"
+    print(f"[STEP]  step={step_num} action={action_str} reward={reward:.2f} done={done_str} error={error_str}")
     sys.stdout.flush()
 
 
-def log_end(task_id: str, task_name: str, final_score: float, total_steps: int):
-    """Emit [END] log."""
-    print(
-        f"[END] task_id={task_id} task_name={task_name} "
-        f"score={final_score} steps={total_steps} "
-        f"timestamp={datetime.now(timezone.utc).isoformat()}"
-    )
+def log_end(success: bool, total_steps: int, score: float, rewards: list):
+    """
+    [END] success=<true|false> steps=<n> score=<score> rewards=<r1,r2,...,rn>
+    """
+    success_str = "true" if success else "false"
+    rewards_str = ",".join([f"{r:.2f}" for r in rewards])
+    print(f"[END]   success={success_str} steps={total_steps} score={score:.2f} rewards={rewards_str}")
     sys.stdout.flush()
 
 
 # ──────────────────────────────────────────────
 # Main task runner
 # ──────────────────────────────────────────────
-def run_task(task: dict) -> float:
-    """Run a single task using the LLM agent. Returns the final reward score."""
+def run_task(task: dict):
+    """Run a single task using the LLM agent."""
     task_id = task["id"]
     task_name = task["name"]
     system_prompt = task["system_prompt"]
 
-    log_start(task_id, task_name)
+    log_start(task_id)
 
     # Reset environment
-    reset_data = env_reset(task_id)
-    obs = reset_data.get("observation", {})
-    info = obs.get("info", "")
+    try:
+        reset_data = env_reset(task_id)
+        obs = reset_data.get("observation", {})
+        info = obs.get("info", "")
+    except Exception as e:
+        log_end(success=False, total_steps=0, score=0.0, rewards=[])
+        return
 
     conversation = [
         {"role": "user", "content": f"Task started. Environment says: {info}\nDecide your first action."}
     ]
 
-    cumulative_reward = 0.0
+    rewards = []
     step_num = 0
+    success = False
+    last_error = None
 
     for step_num in range(1, MAX_STEPS_PER_TASK + 1):
         try:
             # Ask LLM for next action
             action = ask_llm(system_prompt, conversation)
         except Exception as e:
-            print(f"[ERROR] LLM call failed at step {step_num}: {e}", file=sys.stderr)
+            last_error = f"LLM error: {str(e)}"
+            log_step(step_num, {"error": "LLM failed"}, 0.0, True, error=last_error)
             break
 
         # Execute the action in the environment
         try:
             result = env_step(action)
+            obs = result.get("observation", {})
+            reward = result.get("reward", 0.0)
+            done = result.get("done", False)
+            last_error = obs.get("last_action_error")
         except Exception as e:
-            print(f"[ERROR] Environment step failed at step {step_num}: {e}", file=sys.stderr)
+            last_error = f"Env error: {str(e)}"
+            log_step(step_num, action, 0.0, True, error=last_error)
             break
 
-        obs = result.get("observation", {})
-        reward = result.get("reward", 0.0)
-        done = result.get("done", False)
-        cumulative_reward += reward
-
-        # Log the step
-        log_step(task_id, step_num, action, obs, reward, done)
+        rewards.append(reward)
+        log_step(step_num, action, reward, done, error=last_error)
 
         if done:
+            success = (reward >= 1.0)  # Assume 1.0 is full success
             break
 
         # Build observation summary for the LLM
@@ -231,44 +249,21 @@ def run_task(task: dict) -> float:
         conversation.append({"role": "assistant", "content": json.dumps(action)})
         conversation.append({"role": "user", "content": f"Observation from environment:\n{obs_text}\n\nDecide your next action."})
 
-    log_end(task_id, task_name, cumulative_reward, step_num)
-    return cumulative_reward
+    # Calculate final score (normalized to [0, 1])
+    final_score = max(0.0, min(1.0, sum(rewards)))
+    
+    log_end(success=success, total_steps=step_num, score=final_score, rewards=rewards)
 
 
 # ──────────────────────────────────────────────
 # Entry point
 # ──────────────────────────────────────────────
 def main():
-    print("=" * 60)
-    print("CloudSecurityAuditor — OpenEnv Inference")
-    print(f"Model: {MODEL_NAME}")
-    print(f"API:   {API_BASE_URL}")
-    print(f"Env:   {ENV_URL}")
-    print("=" * 60)
-    sys.stdout.flush()
-
-    total_score = 0.0
-    results = []
-
     for task in TASKS:
         try:
-            score = run_task(task)
-            results.append({"task_id": task["id"], "task_name": task["name"], "score": score})
-            total_score += score
-        except Exception as e:
-            print(f"[ERROR] Task {task['id']} failed: {e}", file=sys.stderr)
-            results.append({"task_id": task["id"], "task_name": task["name"], "score": 0.0})
-
-    # Final summary
-    print("\n" + "=" * 60)
-    print("FINAL RESULTS")
-    print("=" * 60)
-    for r in results:
-        status = "✅ PASS" if r["score"] >= 1.0 else "❌ FAIL"
-        print(f"  {r['task_name']:25s} → score={r['score']:.2f}  {status}")
-    print(f"\n  Total Score: {total_score:.2f} / {len(TASKS)}.00")
-    print("=" * 60)
-    sys.stdout.flush()
+            run_task(task)
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
