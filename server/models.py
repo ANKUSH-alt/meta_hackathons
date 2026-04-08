@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic.dataclasses import dataclass
+from pydantic import ConfigDict, BaseModel
 
 class CloudActionType(str, Enum):
     LIST = "list"
@@ -9,7 +10,8 @@ class CloudActionType(str, Enum):
     LOGS = "logs"
     SUBMIT = "submit"
 
-class CloudAction(BaseModel):
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
+class CloudAction:
     action: CloudActionType
     resource_type: Optional[str] = None
     resource_id: Optional[str] = None
@@ -17,8 +19,10 @@ class CloudAction(BaseModel):
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     answer: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
 
-class CloudObservation(BaseModel):
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
+class CloudObservation:
     resources: Optional[List[Dict[str, Any]]] = None
     details: Optional[Dict[str, Any]] = None
     status: Optional[str] = None

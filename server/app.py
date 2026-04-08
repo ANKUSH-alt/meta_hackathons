@@ -6,6 +6,7 @@ from openenv_core.env_server import create_fastapi_app
 from .models import CloudAction, CloudObservation
 from .environment import CloudAuditEnv
 from typing import Any, Dict
+from dataclasses import asdict
 import os
 import sys
 
@@ -13,7 +14,7 @@ import sys
 env = CloudAuditEnv()
 
 # Create the FastAPI app using openenv-core
-app = create_fastapi_app(lambda: env, CloudAction, CloudObservation)
+app = create_fastapi_app(env, CloudAction, CloudObservation)
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
@@ -41,7 +42,7 @@ async def reset_with_task(request: Dict[str, Any] = Body(default={})) -> Dict[st
     """Reset the environment, forwarding task_id from the request body."""
     task_id = request.get("task_id", "easy")
     observation = env.reset(task_id=task_id)
-    return observation.model_dump()
+    return asdict(observation)
 
 # Add custom routes for the UI
 static_dir = os.path.join(os.path.dirname(__file__), "static")
