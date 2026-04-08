@@ -1,5 +1,5 @@
 name: cloud-security-auditor
-version: "0.1.0"
+version: "0.2.0"
 description: "A real-world cloud security audit environment for AI agents."
 hardware:
   tier: "cpu-small"

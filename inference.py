@@ -5,9 +5,9 @@ Uses an LLM (via OpenAI-compatible client) to autonomously solve all 3 security 
 Emits structured [START], [STEP], [END] logs for automated evaluation.
 
 Required environment variables:
-  API_BASE_URL  — The API endpoint for the LLM (e.g., https://openrouter.ai/api/v1)
-  MODEL_NAME    — The model identifier (e.g., openai/gpt-4o-mini)
-  HF_TOKEN      — Your Hugging Face / API key
+  API_BASE_URL  — The API endpoint for the LLM (e.g., https://api.openai.com/v1)
+  MODEL_NAME    — The model identifier (e.g., gpt-4o-mini)
+  API_KEY       — Your API key for the LLM proxy
 """
 
 import os
@@ -21,9 +21,9 @@ from openai import OpenAI
 # ──────────────────────────────────────────────
 # Configuration from environment variables
 # ──────────────────────────────────────────────
-API_BASE_URL = os.getenv("API_BASE_URL", "https://openrouter.ai/api/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "openai/gpt-4o-mini")
-HF_TOKEN = os.getenv("HF_TOKEN", "")
+API_BASE_URL = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
+API_KEY = os.environ.get("API_KEY", "")
+MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-4o-mini")
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME", "")
 
 ENV_URL = os.getenv("ENV_URL", "http://localhost:8000")
@@ -32,7 +32,7 @@ BENCHMARK_NAME = "cloud-security-auditor"
 # Initialize OpenAI-compatible client
 client = OpenAI(
     base_url=API_BASE_URL,
-    api_key=HF_TOKEN,
+    api_key=API_KEY,
 )
 
 # ──────────────────────────────────────────────

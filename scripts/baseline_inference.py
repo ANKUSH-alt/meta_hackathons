@@ -1,7 +1,7 @@
 import requests
 import json
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:7860"
 
 def run_baseline_audit(task_id="easy"):
     print(f"--- Running Baseline for Task: {task_id} ---")

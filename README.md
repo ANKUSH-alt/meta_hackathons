@@ -9,7 +9,7 @@ pinned: false
 license: apache-2.0
 ---
 
-# 🛡️ CloudSecurityAuditor OpenEnv
+# 🛡️ CloudSecurityAuditor OpenEnv (v0.2.0)
 
 **CloudSecurityAuditor** is a high-fidelity, standardized AI agent environment designed to simulate real-world cloud security audit scenarios. Built upon the **OpenEnv** specification, it provides a safe, reproducible sandbox where autonomous agents can practice identifying, analyzing, and remediating critical security vulnerabilities in a mock cloud infrastructure.
 
@@ -54,8 +54,8 @@ This environment is specifically engineered for benchmarking LLM-based security 
 If you are running this in a **Hugging Face Space**:
 
 1.  **Examine the API**: The environment is hosted as a FastAPI server. Use the `/ui` endpoint for a visual dashboard.
-2.  **Inference**: Run the `inference.py` script locally, pointing the `ENV_URL` to your Space's URL.
-3.  **Evaluate**: The system will emit standardized logs for automated leaderboard tracking.
+2.  **Inference (LLM Agent)**: Set `API_BASE_URL` and `API_KEY` (e.g., from LiteLLM proxy) then run `python inference.py`.
+3.  **Evaluate**: The AI agent creates standardized logs for automated evaluation.
 
 ## 🐳 Local Deployment
 
@@ -63,10 +63,15 @@ If you are running this in a **Hugging Face Space**:
 # Clone and Install
 pip install -r requirements.txt
 
-# Run Server
+# Run Server (Default port 7860)
 python -m server.app
 
-# Run Baseline
+# Run Baseline (Rule-based)
+python scripts/baseline_inference.py
+
+# Run LLM Agent (Using API_BASE_URL and API_KEY)
+export API_BASE_URL="https://api.openai.com/v1"
+export API_KEY="your-key"
 python inference.py
 ```
 

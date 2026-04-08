@@ -208,7 +208,7 @@ Every `step()` and `reset()` returns a `CloudObservation`:
 
 ## 9. API Reference
 
-Base URL: `http://localhost:8000`
+Base URL: `http://localhost:7860`
 
 ### `POST /reset`
 Reset the environment to a specific task.
@@ -286,7 +286,7 @@ Dashboard UI (the web interface).
 
 ## 10. Dashboard UI
 
-The application includes a premium dark-mode cybersecurity dashboard accessible at `http://localhost:8000`.
+The application includes a premium dark-mode cybersecurity dashboard accessible at `http://localhost:7860`.
 
 ### Features
 - **Sidebar Task Selector** — Switch between Easy, Medium, and Hard challenges with one click.
@@ -314,7 +314,7 @@ pip install -r requirements.txt
 python -m server.app
 
 # Open in browser
-open http://localhost:8000
+open http://localhost:7860
 ```
 
 ### Running the Baseline Agent
@@ -329,7 +329,7 @@ python scripts/baseline_inference.py
 docker build -t cloud-security-auditor .
 
 # Run the container
-docker run -p 8000:8000 cloud-security-auditor
+docker run -p 7860:7860 cloud-security-auditor
 ```
 
 ### Hugging Face Spaces Deployment
@@ -357,14 +357,14 @@ docker run -p 8000:8000 cloud-security-auditor
 
 ```yaml
 name: cloud-security-auditor
-version: "0.1.0"
+version: "0.2.0"
 description: "A real-world cloud security audit environment for AI agents."
 hardware:
   tier: "cpu-small"
   vCPU: 2
   RAM: 4Gi
-port: 8000
-entrypoint: "uvicorn server.app:app --host 0.0.0.0 --port 8000"
+port: 7860
+entrypoint: "uvicorn server.app:app --host 0.0.0.0 --port 7860"
 tags:
   - security
   - cloud
