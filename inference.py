@@ -21,12 +21,13 @@ from openai import OpenAI
 # ──────────────────────────────────────────────
 # Configuration from environment variables
 # ──────────────────────────────────────────────
-API_BASE_URL = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
-API_KEY = os.environ.get("API_KEY", "")
-MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+API_BASE_URL = os.environ["API_BASE_URL"]
+API_KEY = os.environ["API_KEY"]
+MODEL_NAME = os.environ["MODEL_NAME"]
+
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME", "")
 
-ENV_URL = os.getenv("ENV_URL", "http://localhost:8000")
+ENV_URL = os.getenv("ENV_URL", "http://localhost:7860")
 BENCHMARK_NAME = "cloud-security-auditor"
 
 # Initialize OpenAI-compatible client
