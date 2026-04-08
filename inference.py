@@ -23,7 +23,7 @@ from openai import OpenAI
 # ──────────────────────────────────────────────
 API_BASE_URL = os.environ["API_BASE_URL"]
 API_KEY = os.environ["API_KEY"]
-MODEL_NAME = os.environ["MODEL_NAME"]
+MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-4o-mini")
 
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME", "")
 
@@ -260,11 +260,15 @@ def run_task(task: dict):
 # Entry point
 # ──────────────────────────────────────────────
 def main():
-    for task in TASKS:
-        try:
-            run_task(task)
-        except Exception:
-            pass
+    try:
+        for task in TASKS:
+            try:
+                run_task(task)
+            except Exception as e:
+                print(f"Error running task {task.get('id', 'unknown')}: {e}", file=sys.stderr)
+    except Exception as e:
+        print(f"CRITICAL ERROR in main: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
