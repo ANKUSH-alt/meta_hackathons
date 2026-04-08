@@ -11,7 +11,8 @@ import os
 env = CloudAuditEnv()
 
 # Create the FastAPI app using openenv-core
-app = create_fastapi_app(env, CloudAction, CloudObservation)
+# Wrap env in a lambda to satisfy HF's "must be a callable" requirement
+app = create_fastapi_app(lambda: env, CloudAction, CloudObservation)
 
 # ── Override /reset to properly pass task_id ────────────────────────────────
 # openenv-core's built-in /reset handler ignores request body fields (known TODO).
@@ -37,6 +38,9 @@ async def read_index():
 async def get_state():
     return env.state()
 
-if __name__ == "__main__":
+def main():
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7860)
+    uvicorn.run("server.app:app", host="0.0.0.0", port=7860, reload=True)
+
+if __name__ == "__main__":
+    main()

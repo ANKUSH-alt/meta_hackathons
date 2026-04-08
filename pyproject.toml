@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cloud-security-auditor"
+version = "0.1.0"
+description = "A real-world cloud security audit environment for AI agents."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "openenv-core>=0.1.1",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "python-multipart",
+    "openai",
+    "requests"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "isort"
+]
+
+[project.scripts]
+server = "server.app:main"
+
+[tool.setuptools]
+packages = ["server"]
