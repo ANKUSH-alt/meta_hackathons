@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import List, Optional, Dict, Any
-from dataclasses import dataclass, field
+from pydantic import BaseModel, Field
 
 class CloudActionType(str, Enum):
     LIST = "list"
@@ -9,8 +9,7 @@ class CloudActionType(str, Enum):
     LOGS = "logs"
     SUBMIT = "submit"
 
-@dataclass
-class CloudAction:
+class CloudAction(BaseModel):
     action: CloudActionType
     resource_type: Optional[str] = None
     resource_id: Optional[str] = None
@@ -19,8 +18,7 @@ class CloudAction:
     end_time: Optional[str] = None
     answer: Optional[str] = None
 
-@dataclass
-class CloudObservation:
+class CloudObservation(BaseModel):
     resources: Optional[List[Dict[str, Any]]] = None
     details: Optional[Dict[str, Any]] = None
     status: Optional[str] = None
@@ -29,8 +27,7 @@ class CloudObservation:
     reward: float = 0.0          # Required by openenv-core 0.1.1
     done: bool = False           # Required by openenv-core 0.1.1
 
-@dataclass
-class CloudState:
+class CloudState(BaseModel):
     episode_id: str
     step_count: int
     task_id: str

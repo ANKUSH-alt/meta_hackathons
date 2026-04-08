@@ -24,7 +24,7 @@ async def reset_with_task(request: Dict[str, Any] = Body(default={})) -> Dict[st
     """Reset the environment, forwarding task_id from the request body."""
     task_id = request.get("task_id", "easy")
     observation = env.reset(task_id=task_id)
-    return observation.model_dump() if hasattr(observation, "model_dump") else observation.__dict__
+    return observation.model_dump()
 
 # Add custom routes for the UI
 static_dir = os.path.join(os.path.dirname(__file__), "static")
