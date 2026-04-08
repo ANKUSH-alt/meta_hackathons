@@ -46,8 +46,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/step', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(actionObj)
+                body: JSON.stringify({ action: actionObj })
             });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                const msg = errorData.detail 
+                    ? (typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail))
+                    : response.statusText;
+                throw new Error(`Server ${response.status}: ${msg}`);
+            }
+
             const data = await response.json();
             const obs = data.observation || data;
             const reward = data.reward !== undefined ? data.reward : (obs.reward || 0);
@@ -70,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             log(`❌ Execution failed: ${err.message}`, 'error');
             envStatus.textContent = 'Error';
+            showToast(`Error: ${err.message}`);
         }
     }
 
