@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/step', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: actionObj })
+                body: JSON.stringify(actionObj)
             });
             const data = await response.json();
             const obs = data.observation || data;

@@ -1,18 +1,35 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
 from openenv_core.env_server import create_fastapi_app
 from .models import CloudAction, CloudObservation
 from .environment import CloudAuditEnv
 from typing import Any, Dict
 import os
+import sys
 
 # Initialize the environment
 env = CloudAuditEnv()
 
 # Create the FastAPI app using openenv-core
-# Wrap env in a lambda to satisfy HF's "must be a callable" requirement
 app = create_fastapi_app(lambda: env, CloudAction, CloudObservation)
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    print(f"CRITICAL ERROR: {str(exc)}", file=sys.stderr)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal Server Error: {str(exc)}", "type": "critical_error"}
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    print(f"VALIDATION ERROR: {exc.errors()}", file=sys.stderr)
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "type": "validation_error"}
+    )
 
 # ── Override /reset to properly pass task_id ────────────────────────────────
 # openenv-core's built-in /reset handler ignores request body fields (known TODO).
